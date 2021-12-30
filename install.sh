@@ -38,11 +38,17 @@ else
     user_rc_path="/home/${USERNAME}"
 fi
 
+oh_my_install_dir="${user_rc_path}/.oh-my-zsh"
+user_rc_file="${user_rc_path}/.zshrc"
+
+plugin() {
+    git clone "https://github.com/$1/$2.git" \
+        "${oh_my_install_dir}/custom/plugins/$2" 2>&1
+    sed -i -E "s/^(plugins=\(.+)\)$/\1 $2)/" "${user_rc_file}"
+}
+
 if [ ! -z ${_BUILD_ARG_OMZPLUGINS} ]; then
     echo "Activating feature 'omzplugins'"
-    oh_my_install_dir="${user_rc_path}/.oh-my-zsh"
-    user_rc_file="${user_rc_path}/.zshrc"
-    git clone "https://github.com/zdharma-continuum/fast-syntax-highlighting.git" \
-        "${oh_my_install_dir}/custom/plugins/fast-syntax-highlighting" 2>&1
-    sed -i -E "s/^(plugins=\(.+)\)$/\1 fast-syntax-highlighting)/" "${user_rc_file}"
+    plugin zdharma-continuum fast-syntax-highlighting
+    plugin zsh-users zsh-autosuggestions
 fi
