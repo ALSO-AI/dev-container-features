@@ -38,17 +38,19 @@ else
     user_rc_path="/home/${USERNAME}"
 fi
 
-oh_my_install_dir="${user_rc_path}/.oh-my-zsh"
+oh_my_plugins_dir="${user_rc_path}/.oh-my-zsh/custom/plugins"
 user_rc_file="${user_rc_path}/.zshrc"
 
+plug() { sed -i -E "s/^(plugins=\(.+)\)$/\1 $1)/" "${user_rc_file}"; }
+
 plugin() {
-    git clone "https://github.com/$1/$2.git" \
-        "${oh_my_install_dir}/custom/plugins/$2" 2>&1
-    sed -i -E "s/^(plugins=\(.+)\)$/\1 $2)/" "${user_rc_file}"
+    git clone "https://github.com/$1/$2.git" "${oh_my_install_dir}/$2" 2>&1
+    plug $2
 }
 
 if [ ! -z ${_BUILD_ARG_OMZPLUGINS} ]; then
     echo "Activating feature 'omzplugins'"
+    plug dotnet
     plugin zdharma-continuum fast-syntax-highlighting
     plugin zsh-users zsh-autosuggestions
 fi
