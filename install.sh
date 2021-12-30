@@ -41,16 +41,16 @@ fi
 oh_my_plugins_dir="${user_rc_path}/.oh-my-zsh/custom/plugins"
 user_rc_file="${user_rc_path}/.zshrc"
 
-plug() { sed -i -E "s/^(plugins=\(.+)\)$/\1 $1)/" "${user_rc_file}"; }
+plugin() { sed -i -E "s/^(plugins=\(.+)\)$/\1 $1)/" "${user_rc_file}"; }
 
-plugin() {
+plug() {
     git clone "https://github.com/$1/$2.git" "${oh_my_install_dir}/$2" 2>&1
-    plug $2
+    plugin $2
 }
 
 if [ ! -z ${_BUILD_ARG_OMZPLUGINS} ]; then
     echo "Activating feature 'omzplugins'"
-    plug dotnet
-    plugin zdharma-continuum fast-syntax-highlighting
-    plugin zsh-users zsh-autosuggestions
+    plugin dotnet
+    plug zdharma-continuum fast-syntax-highlighting
+    plug zsh-users zsh-autosuggestions
 fi
