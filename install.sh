@@ -44,7 +44,7 @@ user_rc_file="${user_rc_path}/.zshrc"
 plugin() { sed -i -E "s/^(plugins=\(.+)\)$/\1 $1)/" "${user_rc_file}"; }
 
 plug() {
-    git clone "https://github.com/$1/$2.git" "${oh_my_install_dir}/$2" 2>&1
+    git clone "https://github.com/$1/$2.git" "${oh_my_plugins_dir}/$2" 2>&1
     plugin $2
 }
 
