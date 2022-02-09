@@ -10,56 +10,47 @@ set -a
 . ./devcontainer-features.env
 set +a
 
+USERNAME=${2:-"automatic"}
 
-if [ ! -z ${_BUILD_ARG_HELLOWORLD} ]; then
-    echo "Activating feature 'helloworld'"
-
-    # Build args are exposed to this entire feature set following the pattern:  _BUILD_ARG_<FEATURE ID>_<OPTION NAME>
-    GREETING=${_BUILD_ARG_HELLOWORLD_GREETING:-undefined}
-
-    tee /usr/hello.sh > /dev/null \
-    << EOF
-    #!/bin/bash
-    RED='\033[0;91m'
-    NC='\033[0m' # No Color
-    echo -e "\${RED}${GREETING}, \$(whoami)!"
-    echo -e "\${NC}"
-EOF
-
-    chmod +x /usr/hello.sh
-    sudo cat '/usr/hello.sh' > /usr/local/bin/hello
-    sudo chmod +x /usr/local/bin/hello
+# If in automatic mode, determine if a user already exists, if not use vscode
+if [ "${USERNAME}" = "auto" ] || [ "${USERNAME}" = "automatic" ]; then
+    USERNAME=""
+    POSSIBLE_USERS=("vscode" "node" "codespace" "$(awk -v val=1000 -F ":" '$3==val{print $1}' /etc/passwd)")
+    for CURRENT_USER in ${POSSIBLE_USERS[@]}; do
+        if id -u ${CURRENT_USER} > /dev/null 2>&1; then
+            USERNAME=${CURRENT_USER}
+            break
+        fi
+    done
+    if [ "${USERNAME}" = "" ]; then
+        USERNAME=vscode
+    fi
+elif [ "${USERNAME}" = "none" ]; then
+    USERNAME=root
+    USER_UID=0
+    USER_GID=0
 fi
 
+# ** Shell customization section **
+if [ "${USERNAME}" = "root" ]; then 
+    user_rc_path="/root"
+else
+    user_rc_path="/home/${USERNAME}"
+fi
 
-if [ ! -z ${_BUILD_ARG_COLOR} ]; then
-    echo "Activating feature 'color'"
+oh_my_plugins_dir="${user_rc_path}/.oh-my-zsh/custom/plugins"
+user_rc_file="${user_rc_path}/.zshrc"
 
-    # Build args are exposed to this entire feature set following the pattern:  _BUILD_ARG_<FEATURE ID>_<OPTION NAME>
+plugin() { sed -i -E "s/^(plugins=\(.+)\)$/\1 $1)/" "${user_rc_file}"; }
 
-    if [ "${_BUILD_ARG_COLOR_FAVORITE}" == "red" ]; then
-        FAVORITE='\\033[0\;91m'
-    fi
+plug() {
+    git clone "https://github.com/$1/$2.git" "${oh_my_plugins_dir}/$2" 2>&1
+    plugin $2
+}
 
-    if [ "${_BUILD_ARG_COLOR_FAVORITE}" == "green" ]; then
-        FAVORITE='\\033[0\;32m'
-    fi
-
-    if [ "${_BUILD_ARG_COLOR_FAVORITE}" == "gold" ]; then
-        FAVORITE='\\033[0\;33m'
-    fi
-
-    tee /usr/color.sh > /dev/null \
-    << EOF
-    #!/bin/bash
-    NC='\033[0m' # No Color
-
-    FAVORITE=${FAVORITE}
-    echo -e "\${FAVORITE} This is my favorite color! \${NC}"
-EOF
-
-    chmod +x /usr/color.sh
-    sudo cat '/usr/color.sh' > /usr/local/bin/color
-    sudo chmod +x /usr/local/bin/color
-
+if [ ! -z ${_BUILD_ARG_OMZPLUGINS} ]; then
+    echo "Activating feature 'omzplugins'"
+    plugin dotnet
+    plug zdharma-continuum fast-syntax-highlighting
+    plug zsh-users zsh-autosuggestions
 fi
